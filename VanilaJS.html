@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>정기구독 페이지 연습</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script> -->
+    <style>
+        div#wrap {
+            width: 1800px;
+            margin : 0 auto;
+        } 
+        header {
+            padding-left: 400px;
+        }
+        table#formTbl {
+            width: 1000px;
+            margin : 0 auto;
+            border-collapse: separate;
+            border-spacing: 10px;
+        }
+        table#formTbl > tr > th {
+            width: 300px;
+            text-align: right;
+            padding-right: 10px;
+            vertical-align: top;
+            border: 1px solid #444444;
+        }
+        #formTbl > tr > td {
+            width: 600px;
+        }
+        
+        table#feeTbl {
+            width: 500px;
+            border-collapse: collapse;
+        }
+        #feeTbl th, #feeTbl td{
+
+            border-top: 1px solid #444444;
+            border-bottom: 1px solid #444444;
+
+        }
+        #feeTbl > tr > th:first-child {
+            width: 300px;
+        }
+        #feeTbl > tr:first-child > th {
+            text-align: left;
+        }
+        #feeTbl > tr:not(:first-child) > th {
+            text-align: right;
+        }
+        #feeTbl > tr > td {
+            text-align: right;
+        }
+        ul {
+            margin-top: 0;
+        }
+        
+    </style>
+
+    <script>
+        $(document).ready(function(){
+            $("#viewFeeBtn").click(function(){
+                if($("#feeTbl").css("display") == "block") {
+                    $("#feeTbl").css("display", "none");
+                } else if ($("#feeTbl").css("display") == "none") {
+                    $("#feeTbl").css("display", "block");
+                }
+                
+            });
+
+            $("#foreinMailBtn").click(function(){
+                if($("#foreinMailSelecter").css("display") == "block") {
+                    $("#foreinMailSelecter").css("display", "none");
+                    $("#swiftCd").css("display", "none");
+                } else if ($("#foreinMailSelecter").css("display") == "none") {
+                    $("#foreinMailSelecter").css("display", "block");
+                    $("#swiftCd").css("display", "block");
+                }
+                
+            });
+
+            $("input[name='sendMailCntry']").change(function(){
+                if($(this).val() == 'A'){
+                    $("#price").val("50000")
+		        } else if ($(this).val() == 'B'){
+                    $("#price").val("83000")
+		        } else if ($(this).val() == 'C'){
+                    $("#price").val("86000")
+		        } else if ($(this).val() == 'D'){
+                    $("#price").val("102000")
+		        } else if ($(this).val() == 'E'){
+                    $("#price").val("114000")
+		        }
+                calc()
+            });
+            $("input[name='terms'], input[name='copies'], input[name='donation']").change(function(){
+                calc()
+            });   
+            
+            $("input[name='paymentType']").change(function(){
+                if($(this).val() == 'accountTrans'){
+                    $(".onlyAccountTrans").show();
+		        } else {
+                    $(".onlyAccountTrans").hide();
+		        } 
+            });
+            $("input[name='foreinPayment']").change(function(){
+                if($(this).is(":checked")){
+                    $("#onlyDomesticPayment").hide();
+                    $(".onlyAccountTrans").hide();
+                    $("#onlyForeinPayment").show();
+                    $('input:[name=foreinPayment]:input[value="foreinCreditCard"]').attr("checked", true);
+		        } else {
+                    $("#onlyDomesticPayment").show();
+                    $("#onlyForeinPayment").hide();
+                    $(".onlyAccountTrans").show();
+                    $('input:[name=foreinPayment]:input[value="accountTrans"]').attr("checked", true);
+		        } 
+            });
+
+            $("input[name='email']").change(function(){
+                var email = $(this).val();
+                var emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+                if (!emailPattern.test(email)) {
+                    alert("유효하지 않은 이메일 주소입니다.");
+                    $(this).val("");
+                    return false;
+                } 
+                return true;
+            });
+            
+
+
+
+            $("#form").submit(function(){
+                if($("input[name='donation']") < 0) {
+                    alert("후원금이 0 미만입니다. 다시 입력해주세요.");
+                    return;
+                }
+            });
+
+        });
+        function calc() {
+                var amt =  $("input[name='terms']:checked").val() * $("#copies").val() * $("#price").val();
+                $("#amt").val(amt);
+                var donation = Number($("#donation").val());
+                $("#totAmt").val(amt+donation);
+        }
+
+        var element_wrap = document.getElementById('wrap');
+
+    function foldDaumPostcode() {
+        // iframe을 넣은 element를 안보이게 한다.
+        element_wrap.style.display = 'none';
+    }
+
+    function execDaumPostcode() {
+        // 현재 scroll 위치를 저장해놓는다.
+        var currentScroll = Math.max(document.body.scrollTop, document.documentElement.scrollTop);
+        new daum.Postcode({
+            oncomplete: function(data) {
+                // 검색결과 항목을 클릭했을때 실행할 코드를 작성하는 부분.
+
+                // 각 주소의 노출 규칙에 따라 주소를 조합한다.
+                // 내려오는 변수가 값이 없는 경우엔 공백('')값을 가지므로, 이를 참고하여 분기 한다.
+                var addr = ''; // 주소 변수
+
+
+                //사용자가 선택한 주소 타입에 따라 해당 주소 값을 가져온다.
+                if (data.userSelectedType === 'R') { // 사용자가 도로명 주소를 선택했을 경우
+                    addr = data.roadAddress;
+                } else { // 사용자가 지번 주소를 선택했을 경우(J)
+                    addr = data.jibunAddress;
+                }
+
+                // 우편번호와 주소 정보를 해당 필드에 넣는다.
+                document.getElementById('zipCode').value = data.zonecode;
+                document.getElementById("address1").value = addr;
+                // 커서를 상세주소 필드로 이동한다.
+                document.getElementById("sample3_detailAddress").focus();
+
+                // iframe을 넣은 element를 안보이게 한다.
+                // (autoClose:false 기능을 이용한다면, 아래 코드를 제거해야 화면에서 사라지지 않는다.)
+                element_wrap.style.display = 'none';
+
+                // 우편번호 찾기 화면이 보이기 이전으로 scroll 위치를 되돌린다.
+                document.body.scrollTop = currentScroll;
+            },
+            // 우편번호 찾기 화면 크기가 조정되었을때 실행할 코드를 작성하는 부분. iframe을 넣은 element의 높이값을 조정한다.
+            onresize : function(size) {
+                element_wrap.style.height = size.height+'px';
+            },
+            width : '100%',
+            height : '100%'
+        }).embed(element_wrap);
+
+        // iframe을 넣은 element를 보이게 한다.
+        element_wrap.style.display = 'block';
+    }
+
+    </script>
+</head>
+<body>
+    <div id="wrap">
+        <header>
+            <h1>정기구독 신청</h1>
+        </header>
+        <main>
+            <form action="#" id="form">
+                <table id="formTbl">
+                    <tr>
+                        <th>구독료</th>
+                        <td>
+                            <ul>
+                                <li>1년: 50,000원</li>
+                                <li>2년: 100,000원</li>
+                                <li>3년: 150,000원</li>
+                            </ul>
+                            <p>해외는 우편 요금이 추가됩니다. <input type="button" id="viewFeeBtn" value="해외 구독료 보기"> </p>
+                            
+                            <table id="feeTbl" style="display: none;">
+                                <tr>
+                                    <th>지역</th>
+                                    <th>1년</th>
+                                    <th>2년</th>
+                                    <th>3년</th>
+                                </tr>
+                                <tr>
+                                    <th>국내</th>
+                                    <td>50,000원</td>
+                                    <td>100,000원</td>
+                                    <td>150,000원</td>
+                                </tr>
+                                <tr>
+                                    <th>일본, 대만, 홍콩, 중국, 마카오</th>
+                                    <td>83,000원</td>
+                                    <td>166,000원</td>
+                                    <td>249,000원</td>
+                                </tr>
+                                <tr>
+                                    <th>동남아시아</th>
+                                    <td>86,000원</td>
+                                    <td>172,000원</td>
+                                    <td>258,000원</td>
+                                </tr>
+                                <tr>
+                                    <th>북미, 유럽, 호주, 중동</th>
+                                    <td>102,000원</td>
+                                    <td>204,000원</td>
+                                    <td>306,000원</td>
+                                </tr>
+                                <tr>
+                                    <th>중남미, 아프리카</th>
+                                    <td>114,000원</td>
+                                    <td>228,000원</td>
+                                    <td>342,000원</td>
+                                </tr>
+                            </table>   
+                            <input type="hidden" id="price" value="50000">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>신규/연장</th>
+                        <td>
+                            <input type="radio" name="newYN" value="Y" checked> 신규
+                            <input type="radio" name="newYN" value="N" > 연장
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>신청인</th>
+                        <td>
+                            <input type="text" name="subscriberNm" required>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>소속</th>
+                        <td>
+                            <input type="text" name="affiliation" required> (직장/학교 등)
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>연락처</th>
+                        <td>
+                            <input type="text" name="phoneNumber" required>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>이메일</th>
+                        <td>
+                            <input type="text" name="email" required>
+                            <p>
+                                매일 아침 이메일로 '<a href="">아침에 읽는 &lt;노동자연대&gt;</a>'를 받아 보겠습니다.
+                            </p>
+                            <p>
+                                <input type="radio" name="emailSend" value="Y" checked> 예
+                                <input type="radio" name="emailSend" value="N" > 아니요
+                            </p>
+        
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>우편물 받을 곳</th>
+                        <td>
+                            <input type="radio" name="sendMailCntry" value="A" checked> 국내
+                            <input type="button" id="foreinMailBtn" value="해외">
+                            <p style="display:none" id="foreinMailSelecter">
+                                <input type="radio" name="sendMailCntry" value="B"> 일본, 대만, 홍콩, 중국, 마카오
+                                <input type="radio" name="sendMailCntry" value="C"> 동남아시아
+                                <input type="radio" name="sendMailCntry" value="D"> 북미, 유럽, 호주, 중동
+                                <input type="radio" name="sendMailCntry" value="E"> 중남미, 아프리카
+                                <br>
+                                해외에서 송금하실 때 은행의 스위프트 코드는 다음과 같습니다:
+                                <ul style="display:none" id="swiftCd">
+                                    <li>국민은행 (KOOK MIN BANK) : CZNBKRSE</li>
+                                    <li>농협 (NATIONAL AGRICULTURAL COOPERATIVE FEDERATION=NH BANK) : NACFKRSEXXX</li>
+                                </ul>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>우편번호</th>
+                        <td>
+                            <input type="button" value="우편번호 검색창 열기" onclick="execDaumPostcode()">
+<!--                             
+                            <div id="wrap" style="display:none;border:1px solid;width:500px;height:300px;margin:5px 0;position:relative">
+                                <img src="//t1.daumcdn.net/postcode/resource/images/close.png" id="btnFoldWrap" style="cursor:pointer;position:absolute;right:0px;top:-1px;z-index:1" onclick="foldDaumPostcode()" alt="접기 버튼">
+                            </div>
+-->
+
+                            <input type="text" name="zipCode" id="zipCode" readonly>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>주소</th>
+                        <td>
+                            <input type="text" name="address1" id="address1" readonly>
+                            <br>
+                            <input type="text" name="address2" id="address2" placeholder="상세 주소를 입력해 주세요.">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>구독기간</th>
+                        <td>
+                            <input type="radio" name="terms" value="1" checked > 1년
+                            <input type="radio" name="terms" value="2" > 2년
+                            <input type="radio" name="terms" value="3" > 3년
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>구독부수</th>
+                        <td>
+                            <input type="number" name="copies" id="copies" value="1">부
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>금액</th>
+                        <td>
+                            <input type="number" name="amt" id="amt" value="50000" readonly>원
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>후원</th>
+                        <td>
+                            <input type="number" name="donation" id="donation" value="0">원을 추가로 후원하겠습니다.
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>총 결제 금액</th>
+                        <td>
+                            <input type="number" name="totAmt" id="totAmt" value="50000" readonly>원
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>결제방법</th>
+                        <td>
+                            <p id="onlyDomesticPayment">
+                                <input type="radio" name="paymentType" value="creditCard"  > 신용카드
+                                <br><br>
+                                <input type="radio" name="paymentType" value="phonePayment" > 휴대폰 결제
+                                <br>※ 통신사 사정으로 현재 LG U+ 통신사의 휴대폰 결제는 되지 않습니다. <br><br>
+                                <input type="radio" name="paymentType" value="accountTrans" checked> 계좌이체
+                            </p>
+                            <p id="onlyForeinPayment" style="display:none">
+                                <input type="radio" name="paymentType" value="foreinCreditCard" > 해외 발급 신용카드
+                                <br><br>
+                                <input type="radio" name="paymentType" value="payPal" > 페이팔
+                            </p>
+                            <input type="checkbox" name="foreinPayment" id="foreinPayment" value="Y"> 해외에서 결제
+                        </td>
+                    </tr>
+                    <tr class="onlyAccountTrans">
+                        <th>은행</th>
+                        <td>
+                            <input type="radio" name="bank" value="kookmin" > 국민은행
+                            <input type="radio" name="bank" value="nh" > 농협
+                        </td>
+                    </tr>
+                    <tr class="onlyAccountTrans">
+                        <th>현금영수증</th>
+                        <td>
+                            <input type="checkbox" name="cashReceiptApply" id="cashReceiptApply"> 현금영수증 신청
+                            <p style="display: none;">
+                                <input type="radio" name="cashReceiptType" value="foreinCreditCard" > 휴대폰번호
+                                <input type="radio" name="cashReceiptType" value="foreinCreditCard" > 현금카드번호
+                                <input type="radio" name="cashReceiptType" value="foreinCreditCard" > 사업자번호
+                                <input type="text" name="cashReceiptNo" placeholder="번호를 입력해 주세요">
+                                <input type="checkbox" name="cashReceiptInformAgree" id="cashReceiptInformAgree"> 현금영수증 발급을 위하여 휴대폰번호 또는 현금영수증 카드번호를 수집하며, 5년간 보관에 동의합니다.
+                            </p>
+                        </td>
+                    </tr>
+                    <tr class="onlyAccountTrans">
+                        <th>입금자명</th>
+                        <td>
+                            <input type="text" name="depositorNm" >
+                        </td>
+                    </tr>
+                    <tr class="onlyAccountTrans">
+                        <th>계좌안내</th>
+                        <td>
+                            <ul>
+                                <li>국민은행 020601-04-080896</li>
+                                <li>농협 301-0010-1643-71</li>
+                                <li>예금주 (주)레프트미디어</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>이용약관 및 취소·환불 정책</th>
+                        <td>
+                            <div style="overflow:scroll; width:500px; height:150px; padding:10px; border: 1px solid #444444;">
+                                <strong>
+                                    1조 [개인정보 수집 및 이용 목적]
+                                </strong>
+                                <p>
+                                    ㈜레프트미디어(이하 ‘당사’라 함)는 당사가 제공하는 〈노동자 연대〉 신문 정기구독 서비스 이용자에게 관련 대금 결제, 배송, 구독자 관리에 필요한 개인정보를 수집하고 있습니다. 또한 독자의 자유로운 구독 권리와 언론사의 독립적인 언론 활동을 보장하기 위해 필요한 권리와 의무를 정하고 있습니다.
+                                </p>
+                                <strong>
+                                    2조 [수집하는 개인정보 항목]
+                                </strong>
+                                <p>
+                                    상기 이용 목적의 범위에서 당사는 다음과 같은 항목의 개인정보를 수집합니다. · 이름, 전화번호, 이메일, 소속, 우편 주소 · 대금 결제 필요 정보(선택 사항: 신용카드, 은행 계좌, 휴대폰 정보, 생년월일 등)
+                                </p>
+                                <strong>
+                                    3조 [개인정보의 보유 및 이용기간]
+                                </strong>
+                                <p>
+                                    당사는 정기구독 종료 후 재구독 권유 및 관련 홍보를 위해 10년 동안 구독자의 개인정보를 보유합니다. 이는 당사 내부 방침에 따르며(‘개인정보처리방침’ 참조), 개인정보 보호를 위한 철저한 관리 조처에 기반해 보관 및 이용됩니다.
+                                </p>
+                                <strong>
+                                    4조 [개인정보취급 위탁 관련]
+                                </strong>
+                                <p>
+                                    ① 당사는 정기구독 주문 처리 시 인증, 정산, 취소, 환불 및 거래 확인 요청에 대한 응대와 확인 등의 거래 이행을 위해 결제 수단별 금융기관(신용카드사, 은행 등)과 전자상거래 관련 결제기관(㈜나이스페이먼츠)에 구독자 개인정보를 제공하고 있습니다. 또한, 정기구독 우편 발송을 위해 우편 기관에 개인정보를 제공하고 있습니다.
+                                    <br><br>
+                                    ② 이용자와 원활한 상담 및 각종 이용 서비스 제공을 위해 당사는 컨텐츠 및 업무 제휴 단체인 ‘노동자연대’에 관련 업무에 필요한 개인정보 취급을 위탁하고 있습니다. ‘노동자연대’는 구독 관련 상담, 각종 고객 서비스 제공, 각종 마케팅 및 홍보 등의 업무를 합니다. 관계 법령에 따라 위탁계약 시 개인정보가 안전하게 관리될 수 있도록 필요한 사항을 규정하고 있습니다.
+                                </p>
+
+                                <strong>
+                                    5조 [취소·환불 정책]
+                                </strong>
+                                <p>
+                                    ① 〈노동자 연대〉 종이 신문은 주간으로 연간 52개 호 발행을 원칙으로 합니다. 〈노동자 연대〉 종이 신문을 정기 구독하면 원하는 장소로 신문을 받아볼 수 있으며 정기구독 계약 기간 중 구독료가 조정되더라도 추가 부담이 없습니다.
+                                    <br><br>
+                                    ② 〈노동자 연대〉 종이 신문 정기구독을 신청하면 이후 발행(통상 매주 토요일)되는 종이 신문부터 우편 발송이 시작됩니다. 우편 발송 배송 기간은 통상 2~4일(주말, 공휴일 제외)을 예정하나 우체국 배송 서비스 사정으로 변동될 수 있습니다.
+                                    <br><br>
+                                    ③ 정기구독 신청 취소: 단순 변심으로 인한 정기구독 신청 취소(전액 환불)는 구독 첫 호 우편 발송 이전까지만 가능합니다. 신용카드 결제 청구 취소 시에는 약 7일이 소요되며, 현금 환불 시에는 5~7일이 소요됩니다.
+                                    <br><br>
+                                    ④ 정기 구독 계약 해지: 구독 계약 해지 시에는 〈노동자 연대〉 신문사 이메일(reader@wspaper.org) 또는 전화(02-777-2792)로 계약 해지 의사를 직접 밝혀 주셔야 합니다. 약정한 구독 기간 중에 구독 계약을 해지할 경우 기 선불 납부한 구독료는 원칙적으로 환불이 불가하며 따라서 자동 환불 처리되지 않습니다. 다만, 별도의 환불 요청 사유가 있을 경우 〈노동자 연대〉 신문사로 연락바랍니다. 이 경우에도 그간 구독한 신문 부수 정가, 우편 발송료, 전자결제 수수료(신용카드 결제, 휴대폰 소액 결제 시), 환불금 이체 수수료를 제한 금액이 환불됩니다.
+                                    <br><br>
+                                    ⑤ 구독 계약 기간 중 이사 등으로 주소가 변경됐을 때는 〈노동자 연대〉 웹사이트 내 구독 정보 변경 페이지(https://wspaper.org/send/about-subscription) 또는 이메일((reader@wspaper.org) 또는 전화(02-777-2792)로 변경 내용을 고지해야 합니다. 변경 주소 미고지로 인한 불이익은 당사가 책임지지 않습니다.
+                                </p>
+
+
+
+
+                            </div>
+                            <input type="checkbox" name="termOfUseAgree" id="termOfUseAgree" required> 동의합니다.
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>개인정보 수집 이용 동의</th>
+                        <td>
+                            <p>㈜레프트미디어에 제공하시는 개인정보는 결제 목적으로 ㈜나이스페이먼츠와 공유하며, 구독 중지 10년 후 즉시 폐기합니다.</p>
+                            <p>
+                                <input type="checkbox" name="privacyAgree" id="privacyAgree" required> 동의합니다.
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>남기실 말씀</th>
+                        <td>
+                            <textarea name="memo" id="memo" cols="80" rows="10"></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <td>
+                            <button>신청</button>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        </main>
+    </div>
+</body>
+</html>
